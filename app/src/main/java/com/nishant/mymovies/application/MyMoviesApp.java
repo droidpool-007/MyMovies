@@ -84,5 +84,7 @@ public class MyMoviesApp extends Application {
 		SharedPreferences.Editor editor = getSharedPreferences(Consts.SHARED_PREF, Context.MODE_PRIVATE).edit();
 		editor.putString(Consts.PREF_CONFIG, configJson);
 		editor.apply();
+
+		loadConfigurations();
 	}
 }

@@ -9,11 +9,9 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.transition.Explode;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Window;
 
 import com.nishant.mymovies.R;
 import com.nishant.mymovies.adapters.MoviesFragmentPagerAdapter;
@@ -28,6 +26,8 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,24 +36,33 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class HomeActivity extends BaseActivity {
 
+	@BindView(R.id.activity_home_tabs)
+	TabLayout mTabLayout;
+	@BindView(R.id.activity_home_viewpager)
+	ViewPager mViewpager;
+
 	private MoviesFragmentPagerAdapter mAdapter;
 	private TopRatedMoviesFragment mTopRatedMoviesFragment;
 	private FavouriteMoviesFragment mFavouriteMoviesFragment;
-	private ViewPager mViewpager;
-	private TabLayout mTabLayout;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
+		ButterKnife.bind(this);
 
 		Toolbar toolbar = findViewById(R.id.activity_home_toolbar);
 		setSupportActionBar(toolbar);
 
-		mViewpager = findViewById(R.id.activity_home_viewpager);
-		mTabLayout = findViewById(R.id.activity_home_tabs);
+		if (MyMoviesApp.getInstance().getConfigurationModel() == null) {
+			getConfig();
+		}
+	}
 
+	@Override
+	protected void onResume() {
 		checkForPermissions();
+		super.onResume();
 	}
 
 	@Override
@@ -127,10 +136,7 @@ public class HomeActivity extends BaseActivity {
 		if (mViewpager != null) {
 			setupViewPager();
 			mTabLayout.setupWithViewPager(mViewpager);
-		}
-
-		if (MyMoviesApp.getInstance().getConfigurationModel() == null) {
-			getConfig();
+			mTabLayout.getTabAt(0).select();
 		}
 	}
 
@@ -183,7 +189,7 @@ public class HomeActivity extends BaseActivity {
 					ConfigurationModel configurationModel = response.body();
 					if (configurationModel != null) {
 						MyMoviesApp.getInstance().setConfigurationModel(configurationModel);
-						mTabLayout.getTabAt(0).select();
+						init();
 					} else {
 						showErrorDialog("Error", "Something went wrong: List is null");
 					}
