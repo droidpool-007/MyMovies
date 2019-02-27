@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,11 +78,17 @@ public class FavouriteMoviesFragment extends BaseFragment implements OnLoadMoreL
 		mRecyclerView.setAdapter(mMoviesRecyclerViewAdapter);
 		mRecyclerView.setEmptyView(mEmptyView);
 
+		super.onActivityCreated(savedInstanceState);
+	}
 
+	@Override
+	public void onStart() {
+		Log.i("Nish", "FavouriteMoviesFragment : onStart");
 		if (getFavMovieRepository() != null) {
 			getFavMovieRepository().getAllFavMoviesIds().observe(getViewLifecycleOwner(), new Observer<List<Integer>>() {
 				@Override
 				public void onChanged(@Nullable List<Integer> favMovieIds) {
+					Log.i("Nish", "FavouriteMoviesFragment : getAllFavMoviesIds");
 					mFavMoviesIdList.clear();
 					mFavMoviesIdList.addAll(favMovieIds);
 					if (mMoviesRecyclerViewAdapter != null) {
@@ -93,6 +100,7 @@ public class FavouriteMoviesFragment extends BaseFragment implements OnLoadMoreL
 			getFavMovieRepository().getAllFavMovies().observe(getViewLifecycleOwner(), new Observer<List<FavMovieEntity>>() {
 				@Override
 				public void onChanged(@Nullable List<FavMovieEntity> favMovieEntities) {
+					Log.i("Nish", "FavouriteMoviesFragment : getAllFavMovies");
 					if (favMovieEntities != null) {
 						mFavMovieEntities.clear();
 						mFavMovieEntities.addAll(favMovieEntities);
@@ -107,14 +115,34 @@ public class FavouriteMoviesFragment extends BaseFragment implements OnLoadMoreL
 			});
 		}
 
-		super.onActivityCreated(savedInstanceState);
+		super.onStart();
 	}
 
 	@Override
-	public void onDestroyView() {
+	public void onResume() {
+		Log.i("Nish", "FavouriteMoviesFragment : onResume");
+		super.onResume();
+	}
+
+	@Override
+	public void onPause() {
+		Log.i("Nish", "FavouriteMoviesFragment : onPause");
+		super.onPause();
+	}
+
+	@Override
+	public void onStop() {
+		Log.i("Nish", "FavouriteMoviesFragment : onStop");
+		Log.i("Nish", "FavouriteMoviesFragment : removeObservers");
 		getFavMovieRepository().getAllFavMoviesIds().removeObservers(getViewLifecycleOwner());
 		getFavMovieRepository().getAllFavMovies().removeObservers(getViewLifecycleOwner());
 		mMoviesRecyclerViewAdapter = null;
+		super.onStop();
+	}
+
+
+	@Override
+	public void onDestroyView() {
 		super.onDestroyView();
 		mUnbinder.unbind();
 	}

@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +46,7 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 	LinearLayout mEmptyView;
 
 	private List<ResultsModel> mResultsModelList = new ArrayList<>();
-	private ArrayList<Integer> mFavMoviesList = new ArrayList<>();
+	private ArrayList<Integer> mFavMoviesIdList = new ArrayList<>();
 
 	private Unbinder mUnbinder;
 	private String searchQuery;
@@ -73,38 +74,77 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 		mRecyclerView.setHasFixedSize(true);
 		mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 		mRecyclerView.addItemDecoration(new ItemOffsetDecoration(getContext(), R.dimen.item_offset));
-		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesList, this, this);
+		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesIdList, this, this);
 		mRecyclerView.setAdapter(mAdapter);
 		mRecyclerView.setEmptyView(mEmptyView);
 
 		isLoaded = true;
 		movieViewModel = ViewModelProviders.of(this).get(MovieViewModel.class);
 
-		getFavMovieRepository().getAllFavMoviesIds().observe(getViewLifecycleOwner(), favMovieIds -> {
-			mFavMoviesList.clear();
-			mFavMoviesList.addAll(favMovieIds);
-			if (mAdapter != null) {
-				mAdapter.updateFavMoviesList(mFavMoviesList);
-			}
-		});
-
-		movieViewModel.getResultModelLiveData().observe(getViewLifecycleOwner(), pagedList -> {
-			mAdapter.updateFavMoviesList(mFavMoviesList);
-			mAdapter.submitList(pagedList);
-		});
-
-		movieViewModel.getNetworkState().observe(getViewLifecycleOwner(), networkState -> {
-			mAdapter.setNetworkState(networkState);
-		});
-
 		super.onActivityCreated(savedInstanceState);
 	}
 
 	@Override
-	public void onDestroyView() {
+	public void onStart() {
+		Log.i("Nish", "TopRatedMoviesFragment : onStart");
+		getFavMovieRepository().getAllFavMoviesIds().observe(getViewLifecycleOwner(), favMovieIds -> {
+			Log.i("Nish", "TopRatedMoviesFragment : getAllFavMoviesIds");
+			mFavMoviesIdList.clear();
+			mFavMoviesIdList.addAll(favMovieIds);
+			if (mAdapter != null) {
+				mAdapter.updateFavMoviesList(mFavMoviesIdList);
+			}
+		});
+
+		movieViewModel.getResultModelLiveData().observe(getViewLifecycleOwner(), pagedList -> {
+			Log.i("Nish", "TopRatedMoviesFragment : getResultModelLiveData");
+			mAdapter.updateFavMoviesList(mFavMoviesIdList);
+			mAdapter.submitList(pagedList);
+		});
+
+		movieViewModel.getNetworkState().observe(getViewLifecycleOwner(), networkState -> {
+			Log.i("Nish", "TopRatedMoviesFragment : getNetworkState");
+			mAdapter.setNetworkState(networkState);
+		});
+		super.onStart();
+	}
+
+	@Override
+	public void onResume() {
+		Log.i("Nish", "TopRatedMoviesFragment : onResume");
+		super.onResume();
+	}
+
+	@Override
+	public void onPause() {
+		Log.i("Nish", "TopRatedMoviesFragment : onPause");
+		super.onPause();
+	}
+
+	@Override
+	public void onStop() {
+		Log.i("Nish", "TopRatedMoviesFragment : onStop");
+		Log.i("Nish", "TopRatedMoviesFragment : removeObservers");
 		movieViewModel.getResultModelLiveData().removeObservers(getViewLifecycleOwner());
 		movieViewModel.getNetworkState().removeObservers(getViewLifecycleOwner());
 		getFavMovieRepository().getAllFavMoviesIds().removeObservers(getViewLifecycleOwner());
+		super.onStop();
+	}
+
+	@Override
+	public void onDestroy() {
+		Log.i("Nish", "TopRatedMoviesFragment : onDestroy");
+		super.onDestroy();
+	}
+
+	@Override
+	public void onDetach() {
+		Log.i("Nish", "TopRatedMoviesFragment : onDetach");
+		super.onDetach();
+	}
+
+	@Override
+	public void onDestroyView() {
 		super.onDestroyView();
 		mUnbinder.unbind();
 	}
@@ -117,7 +157,7 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 		intent.putExtra(Consts.EXTRA_MOVIE, resultsModel);
 		intent.putExtra(Consts.EXTRA_MOVIE_URL, MyMoviesApp.getInstance().getImagePosterBaseUrl() + resultsModel.getPosterPath());
 
-		if (mFavMoviesList.contains(resultsModel.getId())) {
+		if (mFavMoviesIdList.contains(resultsModel.getId())) {
 			intent.putExtra(Consts.EXTRA_FAV, true);
 		} else {
 			intent.putExtra(Consts.EXTRA_FAV, false);
@@ -135,7 +175,7 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 			} else {
 				getFavMovieRepository().deleteFavMovie(resultsModel);
 			}
-			mAdapter.updateFavMoviesList(mFavMoviesList);
+			mAdapter.updateFavMoviesList(mFavMoviesIdList);
 		}
 	}
 
@@ -150,9 +190,10 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 			return;
 		}
 
-		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesList, this, this);
+		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesIdList, this, this);
 		movieViewModel.getSearchResultModelLiveData().observe(this, pagedList -> {
-			mAdapter.updateFavMoviesList(mFavMoviesList);
+
+			mAdapter.updateFavMoviesList(mFavMoviesIdList);
 			mAdapter.submitList(pagedList);
 		});
 
@@ -177,9 +218,9 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 			return;
 		}
 
-		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesList, this, this);
+		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesIdList, this, this);
 		movieViewModel.getResultModelLiveData().observe(this, pagedList -> {
-			mAdapter.updateFavMoviesList(mFavMoviesList);
+			mAdapter.updateFavMoviesList(mFavMoviesIdList);
 			mAdapter.submitList(pagedList);
 		});
 

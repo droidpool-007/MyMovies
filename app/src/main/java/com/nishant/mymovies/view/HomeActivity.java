@@ -54,6 +54,9 @@ public class HomeActivity extends BaseActivity {
 		Toolbar toolbar = findViewById(R.id.activity_home_toolbar);
 		setSupportActionBar(toolbar);
 
+		setupViewPager();
+		mTabLayout.setupWithViewPager(mViewpager);
+
 		if (MyMoviesApp.getInstance().getConfigurationModel() == null) {
 			getConfig();
 		}
@@ -133,11 +136,6 @@ public class HomeActivity extends BaseActivity {
 	}
 
 	private void init() {
-		if (mViewpager != null) {
-			setupViewPager();
-			mTabLayout.setupWithViewPager(mViewpager);
-			mTabLayout.getTabAt(0).select();
-		}
 	}
 
 	private void setupViewPager() {
@@ -149,33 +147,6 @@ public class HomeActivity extends BaseActivity {
 		mViewpager.setAdapter(mAdapter);
 
 		mViewpager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
-
-		mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-			@Override
-			public void onTabSelected(TabLayout.Tab tab) {
-//					switch (tab.getPosition()) {
-//						case 0:
-//							break;
-//						case 1:
-//							break;
-//					}
-			}
-
-			@Override
-			public void onTabUnselected(TabLayout.Tab tab) {
-
-			}
-
-			@Override
-			public void onTabReselected(TabLayout.Tab tab) {
-//				switch (tab.getPosition()) {
-//					case 0:
-//						break;
-//					case 1:
-//						break;
-//				}
-			}
-		});
 	}
 
 	public void getConfig() {

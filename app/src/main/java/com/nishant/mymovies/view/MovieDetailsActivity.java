@@ -15,7 +15,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -182,7 +181,8 @@ public class MovieDetailsActivity extends BaseActivity {
 		switch (item.getItemId()) {
 			case android.R.id.home:
 				supportFinishAfterTransition();
-				return true;
+				finish();
+				break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
