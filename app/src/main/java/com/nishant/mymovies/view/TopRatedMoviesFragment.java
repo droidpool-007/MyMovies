@@ -1,6 +1,5 @@
 package com.nishant.mymovies.view;
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,58 +65,46 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_top_rated_movies, container, false);
 		mUnbinder = ButterKnife.bind(this, rootView);
-
-		movieViewModel = ViewModelProviders.of(this).get(MovieViewModel.class);
-
-		mRecyclerView.setHasFixedSize(true);
-		mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-		mRecyclerView.addItemDecoration(new ItemOffsetDecoration(getContext(), R.dimen.item_offset));
-
-		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesList, this, this);
-
-		mRecyclerView.setAdapter(mAdapter);
-		mRecyclerView.setEmptyView(mEmptyView);
-
-		isLoaded = true;
 		return rootView;
 	}
 
 	@Override
-	public void onResume() {
-		getFavMovieRepository().getAllFavMoviesIds().observe(this, new Observer<List<Integer>>() {
-			@Override
-			public void onChanged(@Nullable List<Integer> favMovieIds) {
-				Log.i("Nish", "TopRatedMoviesFragment : Id Change Received");
-				mFavMoviesList.clear();
-				mFavMoviesList.addAll(favMovieIds);
-				if (mAdapter != null) {
-					mAdapter.updateFavMoviesList(mFavMoviesList);
-				}
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		mRecyclerView.setHasFixedSize(true);
+		mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+		mRecyclerView.addItemDecoration(new ItemOffsetDecoration(getContext(), R.dimen.item_offset));
+		mAdapter = new MoviePagedListAdapter(getActivity().getApplicationContext(), mFavMoviesList, this, this);
+		mRecyclerView.setAdapter(mAdapter);
+		mRecyclerView.setEmptyView(mEmptyView);
+
+		isLoaded = true;
+		movieViewModel = ViewModelProviders.of(this).get(MovieViewModel.class);
+
+		getFavMovieRepository().getAllFavMoviesIds().observe(getViewLifecycleOwner(), favMovieIds -> {
+			mFavMoviesList.clear();
+			mFavMoviesList.addAll(favMovieIds);
+			if (mAdapter != null) {
+				mAdapter.updateFavMoviesList(mFavMoviesList);
 			}
 		});
 
-		movieViewModel.getResultModelLiveData().observe(this, pagedList -> {
+		movieViewModel.getResultModelLiveData().observe(getViewLifecycleOwner(), pagedList -> {
 			mAdapter.updateFavMoviesList(mFavMoviesList);
 			mAdapter.submitList(pagedList);
 		});
 
-		movieViewModel.getNetworkState().observe(this, networkState -> {
+		movieViewModel.getNetworkState().observe(getViewLifecycleOwner(), networkState -> {
 			mAdapter.setNetworkState(networkState);
 		});
 
-		super.onResume();
-	}
-
-	@Override
-	public void onStop() {
-		getFavMovieRepository().getAllFavMoviesIds().removeObservers(this);
-		movieViewModel.getResultModelLiveData().removeObservers(this);
-		movieViewModel.getNetworkState().removeObservers(this);
-		super.onStop();
+		super.onActivityCreated(savedInstanceState);
 	}
 
 	@Override
 	public void onDestroyView() {
+		movieViewModel.getResultModelLiveData().removeObservers(getViewLifecycleOwner());
+		movieViewModel.getNetworkState().removeObservers(getViewLifecycleOwner());
+		getFavMovieRepository().getAllFavMoviesIds().removeObservers(getViewLifecycleOwner());
 		super.onDestroyView();
 		mUnbinder.unbind();
 	}
@@ -203,13 +189,5 @@ public class TopRatedMoviesFragment extends BaseFragment implements RecyclerView
 
 		mRecyclerView.setAdapter(mAdapter);
 		mRecyclerView.setEmptyView(mEmptyView);
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == Consts.REQUEST_CODE_VIEW_MOVIE) {
-			//
-		}
-		super.onActivityResult(requestCode, resultCode, data);
 	}
 }
